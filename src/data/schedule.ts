@@ -3,33 +3,28 @@ export const HOURS: number[] = Array.from({ length: 14 }, (_, i) => i + 9) // 9.
 
 export const DAYS_AHEAD = 7
 
-export interface OccupiedSlot {
-  dayOffset: number // 0 = hoy, 1 = mañana, ...
-  courtId: string
-  hour: number
+export const PRICE_PER_HOUR = 1200
+
+export function isPeakHour(hour: number): boolean {
+  return hour >= 18 && hour <= 21
 }
 
-// Datos de ejemplo (hardcodeados) para simular una agenda con turnos ya ocupados.
-export const OCCUPIED_SLOTS: OccupiedSlot[] = [
-  { dayOffset: 0, courtId: "c1", hour: 19 },
-  { dayOffset: 0, courtId: "c1", hour: 20 },
-  { dayOffset: 0, courtId: "c2", hour: 10 },
-  { dayOffset: 0, courtId: "c3", hour: 21 },
-  { dayOffset: 1, courtId: "c1", hour: 9 },
-  { dayOffset: 1, courtId: "c2", hour: 18 },
-  { dayOffset: 1, courtId: "c2", hour: 19 },
-  { dayOffset: 1, courtId: "c3", hour: 12 },
-  { dayOffset: 2, courtId: "c1", hour: 20 },
-  { dayOffset: 2, courtId: "c1", hour: 21 },
-  { dayOffset: 2, courtId: "c3", hour: 17 },
-  { dayOffset: 3, courtId: "c2", hour: 9 },
-  { dayOffset: 3, courtId: "c2", hour: 10 },
-  { dayOffset: 3, courtId: "c1", hour: 22 },
-  { dayOffset: 4, courtId: "c3", hour: 19 },
-  { dayOffset: 4, courtId: "c3", hour: 20 },
-  { dayOffset: 4, courtId: "c1", hour: 11 },
-  { dayOffset: 5, courtId: "c1", hour: 18 },
-  { dayOffset: 5, courtId: "c2", hour: 21 },
-  { dayOffset: 6, courtId: "c2", hour: 20 },
-  { dayOffset: 6, courtId: "c3", hour: 9 },
-]
+/**
+ * Hash determinístico chiquito (FNV-1a) para simular una agenda "viva":
+ * el mismo día + cancha + hora siempre da el mismo resultado, así que la
+ * demo se ve ocupada de forma consistente sin depender de un backend.
+ */
+function hashToUnit(input: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return (h >>> 0) / 0xffffffff
+}
+
+/** Turnos de ejemplo ya "ocupados" para una fecha (YYYY-MM-DD) dada. */
+export function isOccupiedByDefault(dateKey: string, courtId: string, hour: number): boolean {
+  const threshold = isPeakHour(hour) ? 0.62 : 0.3
+  return hashToUnit(`${dateKey}|${courtId}|${hour}`) < threshold
+}

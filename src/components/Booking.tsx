@@ -1,12 +1,19 @@
 import { useEffect, useMemo, useState } from "react"
 import { courts } from "../data/courts"
-import { DAYS_AHEAD, HOURS, OCCUPIED_SLOTS } from "../data/schedule"
-
-const STORAGE_KEY = "padel-minas-club.reservas"
+import { HOURS, PRICE_PER_HOUR, isOccupiedByDefault } from "../data/schedule"
+import {
+  isPastSlot,
+  loadReservations,
+  saveReservations,
+  toDateKey,
+  type Reservation,
+} from "../data/booking"
+import BookingModal from "./BookingModal"
+import MisReservas from "./MisReservas"
+import { useReveal, revealClass } from "../hooks/useReveal"
 
 interface DayOption {
-  offset: number
-  date: Date
+  dateKey: string
   label: string
   sublabel: string
 }
@@ -14,122 +21,128 @@ interface DayOption {
 function buildDays(): DayOption[] {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-
-  return Array.from({ length: DAYS_AHEAD }, (_, offset) => {
+  return Array.from({ length: 7 }, (_, offset) => {
     const date = new Date(today)
     date.setDate(date.getDate() + offset)
     return {
-      offset,
-      date,
+      dateKey: toDateKey(date),
       label: offset === 0 ? "Hoy" : offset === 1 ? "Mañana" : date.toLocaleDateString("es-UY", { weekday: "short" }),
       sublabel: date.toLocaleDateString("es-UY", { day: "2-digit", month: "2-digit" }),
     }
   })
 }
 
-function slotKey(dayOffset: number, courtId: string, hour: number) {
-  return `${dayOffset}-${courtId}-${hour}`
+interface SelectedSlot {
+  courtId: string
+  hour: number
 }
 
-function loadReservations(): Set<string> {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return new Set()
-    const parsed = JSON.parse(raw) as string[]
-    return new Set(parsed)
-  } catch {
-    return new Set()
-  }
-}
+type SlotState = "pasado" | "ocupado" | "mia" | "libre"
 
 function Booking() {
-  const days = useMemo(buildDays, [])
-  const [selectedDay, setSelectedDay] = useState(0)
-  const [reservations, setReservations] = useState<Set<string>>(() => loadReservations())
+  const days = useMemo(() => buildDays(), [])
+  const [selectedDateKey, setSelectedDateKey] = useState(days[0].dateKey)
+  const [mobileCourtId, setMobileCourtId] = useState(courts[0].id)
+  const [reservations, setReservations] = useState<Reservation[]>(() => loadReservations())
+  const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(reservations)))
+    saveReservations(reservations)
   }, [reservations])
 
-  const occupiedSet = useMemo(() => {
-    return new Set(
-      OCCUPIED_SLOTS.map((slot) => slotKey(slot.dayOffset, slot.courtId, slot.hour))
-    )
-  }, [])
-
-  function handleSlotClick(courtId: string, hour: number) {
-    const key = slotKey(selectedDay, courtId, hour)
-    if (occupiedSet.has(key)) return
-
-    setReservations((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) {
-        const confirmCancel = window.confirm("¿Cancelar esta reserva?")
-        if (!confirmCancel) return prev
-        next.delete(key)
-      } else {
-        next.add(key)
-      }
-      return next
-    })
+  function slotState(dateKey: string, courtId: string, hour: number): SlotState {
+    if (isPastSlot(dateKey, hour)) return "pasado"
+    if (reservations.some((r) => r.dateKey === dateKey && r.courtId === courtId && r.hour === hour)) {
+      return "mia"
+    }
+    if (isOccupiedByDefault(dateKey, courtId, hour)) return "ocupado"
+    return "libre"
   }
 
+  function handleConfirmed(reservation: Reservation) {
+    setReservations((prev) => [...prev, reservation])
+  }
+
+  function handleCancel(id: string) {
+    setReservations((prev) => prev.filter((r) => r.id !== id))
+  }
+
+  const selectedCourt = courts.find((c) => c.id === selectedSlot?.courtId) ?? null
+  const { ref: headRef, visible: headVisible } = useReveal<HTMLDivElement>()
+  const { ref: gridRef, visible: gridVisible } = useReveal<HTMLDivElement>(80)
+
   return (
-    <section id="reservar" className="bg-neutral-900 py-20 sm:py-24">
+    <section id="agenda" className="bg-hueso-50 py-16 sm:py-24">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center mb-10">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white">Reservá tu turno</h2>
-          <p className="mt-3 text-neutral-400 max-w-xl mx-auto">
-            Elegí el día, la cancha y el horario. Los turnos disponibles se
-            marcan en verde: hacé click para reservar.
+        <div
+          ref={headRef}
+          className={`reveal max-w-2xl ${revealClass(headVisible)}`}
+        >
+          <p className="font-display text-sm font-bold uppercase tracking-[0.25em] text-ladrillo-600">
+            La agenda
+          </p>
+          <h2 className="mt-2 font-display text-4xl font-black uppercase tracking-tight text-cancha-900 sm:text-5xl">
+            Reservá tu turno
+          </h2>
+          <p className="mt-3 text-base text-ink-700">
+            Elegí el día, la cancha y el horario. Confirmás con tu nombre y
+            teléfono, y te queda un código de reserva para mostrar en el club.
           </p>
         </div>
 
         {/* Selector de día */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-8 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="mt-8 flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
           {days.map((day) => (
             <button
-              key={day.offset}
-              onClick={() => setSelectedDay(day.offset)}
-              className={`flex flex-col items-center shrink-0 rounded-xl border px-4 py-2.5 min-w-[72px] transition-colors ${
-                selectedDay === day.offset
-                  ? "bg-green-500 border-green-500 text-neutral-950"
-                  : "bg-neutral-800 border-white/10 text-neutral-300 hover:border-green-500/50"
+              key={day.dateKey}
+              onClick={() => setSelectedDateKey(day.dateKey)}
+              className={`flex min-w-[76px] shrink-0 flex-col items-center rounded-lg border px-4 py-2.5 transition-colors ${
+                selectedDateKey === day.dateKey
+                  ? "border-cancha-900 bg-cancha-900 text-hueso-50"
+                  : "border-cancha-900/15 bg-hueso-100 text-ink-700 hover:border-cancha-700/50"
               }`}
             >
               <span className="text-xs font-semibold capitalize">{day.label}</span>
-              <span className="text-sm font-bold">{day.sublabel}</span>
+              <span className="font-display text-lg font-bold">{day.sublabel}</span>
             </button>
           ))}
         </div>
 
         {/* Leyenda */}
-        <div className="flex flex-wrap gap-4 mb-4 text-xs text-neutral-400">
+        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium text-ink-500">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-green-500 inline-block" /> Disponible
+            <span className="h-3 w-3 rounded-sm border-2 border-cancha-700 inline-block" /> Libre
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-blue-500 inline-block" /> Tu reserva
+            <span className="h-3 w-3 rounded-sm bg-cancha-900 inline-block" /> Tu reserva
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-neutral-700 inline-block" /> Ocupado
+            <span className="h-3 w-3 rounded-sm bg-ladrillo-600 inline-block" /> Ocupado
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-sm bg-ink-500/20 inline-block" /> Pasado
           </span>
         </div>
 
-        {/* Grilla de horarios */}
-        <div className="overflow-x-auto rounded-2xl border border-white/10 bg-neutral-950">
-          <div className="min-w-[720px]">
+        {/* Grilla desktop */}
+        <div
+          ref={gridRef}
+          className={`reveal mt-5 hidden overflow-x-auto rounded-xl border border-cancha-900/15 bg-cancha-900 md:block ${revealClass(gridVisible)}`}
+        >
+          <div className="min-w-[760px]">
             <div
-              className="grid border-b border-white/10"
-              style={{ gridTemplateColumns: `140px repeat(${HOURS.length}, 1fr)` }}
+              className="grid border-b border-hueso-50/10"
+              style={{ gridTemplateColumns: `150px repeat(${HOURS.length}, 1fr)` }}
             >
-              <div className="p-3 text-xs font-semibold text-neutral-500">Cancha</div>
+              <div className="p-3 text-xs font-bold uppercase tracking-wide text-hueso-100/60">
+                Cancha
+              </div>
               {HOURS.map((hour) => (
                 <div
                   key={hour}
-                  className="p-3 text-center text-xs font-semibold text-neutral-500 border-l border-white/5"
+                  className="border-l border-hueso-50/5 p-3 text-center font-display text-sm font-bold text-hueso-100/70"
                 >
-                  {hour}:00
+                  {hour}
                 </div>
               ))}
             </div>
@@ -137,39 +150,40 @@ function Booking() {
             {courts.map((court) => (
               <div
                 key={court.id}
-                className="grid border-b border-white/5 last:border-b-0"
-                style={{ gridTemplateColumns: `140px repeat(${HOURS.length}, 1fr)` }}
+                className="grid border-b border-hueso-50/5 last:border-b-0"
+                style={{ gridTemplateColumns: `150px repeat(${HOURS.length}, 1fr)` }}
               >
-                <div className="p-3 flex flex-col justify-center">
-                  <span className="text-sm font-semibold text-white">{court.name}</span>
-                  <span className="text-[11px] text-neutral-500 capitalize">{court.type}</span>
+                <div className="flex flex-col justify-center p-3">
+                  <span className="text-sm font-semibold text-hueso-50">{court.name}</span>
+                  <span className="text-[11px] capitalize text-hueso-100/50">{court.type}</span>
                 </div>
                 {HOURS.map((hour) => {
-                  const key = slotKey(selectedDay, court.id, hour)
-                  const isOccupied = occupiedSet.has(key)
-                  const isReserved = reservations.has(key)
-
+                  const state = slotState(selectedDateKey, court.id, hour)
                   return (
                     <button
                       key={hour}
-                      onClick={() => handleSlotClick(court.id, hour)}
-                      disabled={isOccupied}
+                      disabled={state !== "libre"}
+                      onClick={() => setSelectedSlot({ courtId: court.id, hour })}
                       title={
-                        isOccupied
+                        state === "ocupado"
                           ? "Turno ocupado"
-                          : isReserved
-                            ? "Tu reserva — click para cancelar"
-                            : `Reservar ${court.name} a las ${hour}:00`
+                          : state === "pasado"
+                            ? "Turno pasado"
+                            : state === "mia"
+                              ? "Tu reserva"
+                              : `Reservar ${court.name} a las ${hour}:00`
                       }
-                      className={`m-1.5 h-10 rounded-lg border text-xs font-semibold transition-colors ${
-                        isOccupied
-                          ? "bg-neutral-800 border-neutral-700 text-neutral-600 cursor-not-allowed"
-                          : isReserved
-                            ? "bg-blue-500 border-blue-400 text-white hover:bg-blue-400"
-                            : "bg-green-500/15 border-green-500/40 text-green-400 hover:bg-green-500 hover:text-neutral-950"
+                      className={`m-1.5 h-10 rounded-md border text-[11px] font-bold transition-all duration-200 ${
+                        state === "ocupado"
+                          ? "cursor-not-allowed border-ladrillo-600/40 bg-ladrillo-600/80 text-hueso-50/90"
+                          : state === "pasado"
+                            ? "cursor-not-allowed border-hueso-50/5 bg-hueso-50/5 text-hueso-100/30"
+                            : state === "mia"
+                              ? "border-hueso-50/30 bg-hueso-50 text-cancha-900"
+                              : "border-hueso-50/25 bg-transparent text-hueso-100 hover:scale-[1.04] hover:border-hueso-50 hover:bg-hueso-50/10"
                       }`}
                     >
-                      {isOccupied ? "—" : isReserved ? "Reservado" : "Libre"}
+                      {state === "ocupado" ? "Ocupado" : state === "pasado" ? "—" : state === "mia" ? "Reservado" : "Libre"}
                     </button>
                   )
                 })}
@@ -178,11 +192,79 @@ function Booking() {
           </div>
         </div>
 
-        <p className="mt-4 text-center text-xs text-neutral-500">
-          Demo de portafolio: las reservas se guardan en tu navegador (localStorage),
-          no hay backend real detrás.
+        {/* Vista mobile: tabs por cancha + lista vertical */}
+        <div className="mt-5 md:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Elegir cancha">
+            {courts.map((court) => (
+              <button
+                key={court.id}
+                role="tab"
+                aria-selected={mobileCourtId === court.id}
+                onClick={() => setMobileCourtId(court.id)}
+                className={`min-h-[44px] shrink-0 rounded-lg border px-4 text-sm font-bold transition-colors ${
+                  mobileCourtId === court.id
+                    ? "border-cancha-900 bg-cancha-900 text-hueso-50"
+                    : "border-cancha-900/15 bg-hueso-100 text-ink-700"
+                }`}
+              >
+                {court.name}
+              </button>
+            ))}
+          </div>
+
+          <ul className="mt-3 divide-y divide-cancha-900/10 rounded-xl border border-cancha-900/15 bg-hueso-100">
+            {HOURS.map((hour) => {
+              const state = slotState(selectedDateKey, mobileCourtId, hour)
+              const disabled = state !== "libre"
+              return (
+                <li key={hour}>
+                  <button
+                    disabled={disabled}
+                    onClick={() => setSelectedSlot({ courtId: mobileCourtId, hour })}
+                    className="flex min-h-[56px] w-full items-center justify-between px-4 py-2 text-left disabled:cursor-not-allowed"
+                  >
+                    <span className="font-display text-xl font-bold text-cancha-900">
+                      {hour}:00
+                    </span>
+                    <span
+                      className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-wide ${
+                        state === "ocupado"
+                          ? "bg-ladrillo-600/15 text-ladrillo-700"
+                          : state === "pasado"
+                            ? "bg-ink-500/10 text-ink-500"
+                            : state === "mia"
+                              ? "bg-cancha-900 text-hueso-50"
+                              : "bg-cancha-700/10 text-cancha-800"
+                      }`}
+                    >
+                      {state === "ocupado" ? "Ocupado" : state === "pasado" ? "Pasado" : state === "mia" ? "Reservado" : "Libre"}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+
+        <p className="mt-6 text-xs text-ink-500">
+          Precio de referencia: ${PRICE_PER_HOUR} la hora. Demo: las reservas se
+          guardan solo en tu navegador.
         </p>
+
+        <div className="mt-14 border-t border-cancha-900/10 pt-10">
+          <MisReservas reservations={reservations} onCancel={handleCancel} />
+        </div>
       </div>
+
+      {selectedSlot && selectedCourt && (
+        <BookingModal
+          court={selectedCourt}
+          dateKey={selectedDateKey}
+          hour={selectedSlot.hour}
+          onClose={() => setSelectedSlot(null)}
+          onConfirmed={handleConfirmed}
+        />
+      )}
     </section>
   )
 }

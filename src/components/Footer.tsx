@@ -1,30 +1,60 @@
+import { AUTOR } from "../config"
+
+const HORARIOS = [
+  { dia: "Lunes a viernes", horas: "8:00 – 23:00" },
+  { dia: "Sábados", horas: "9:00 – 23:00" },
+  { dia: "Domingos y feriados", horas: "9:00 – 21:00" },
+]
+
 function Footer() {
+  const autorHref = `https://wa.me/${AUTOR.whatsapp}?text=${encodeURIComponent(
+    "Hola Mariano! Vi la demo de Pádel Minas Club y quiero una página así para mi negocio."
+  )}`
+
   return (
-    <footer id="contacto" className="bg-neutral-950 border-t border-white/10 pt-16 pb-24 sm:pb-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 grid grid-cols-1 md:grid-cols-2 gap-10">
+    <footer id="llegar" className="bg-cancha-950 pb-28 pt-16 text-hueso-100 sm:pb-14">
+      <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:grid-cols-2">
         <div>
-          <div className="flex items-center gap-2 mb-4">
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-500 text-neutral-950 font-black text-lg">
-              PM
-            </span>
-            <span className="text-white font-bold text-lg">Pádel Minas Club</span>
-          </div>
-          <p className="text-sm text-neutral-400 max-w-sm">
-            Club ficticio de ejemplo para una demo de portafolio. Ubicado en
-            Minas, Uruguay.
+          <p className="font-display text-sm font-bold uppercase tracking-[0.25em] text-ladrillo-400">
+            Cómo llegar
           </p>
-          <div className="mt-6 space-y-1 text-sm text-neutral-400">
-            <p>📍 Ruta 8 km 121, Minas, Lavalleja, Uruguay</p>
-            <p>📞 +598 99 000 000</p>
-            <p>✉️ hola@padelminasclub.uy (ficticio)</p>
-          </div>
+          <h2 className="mt-2 font-display text-3xl font-black uppercase tracking-tight text-hueso-50">
+            Pádel Minas Club
+          </h2>
+          <address className="mt-4 space-y-1 text-sm not-italic text-hueso-100/80">
+            <p>Ruta 8 km 121, frente al Parque Salus — Minas, Lavalleja</p>
+            <p>Tel. +598 99 000 000 (WhatsApp)</p>
+            <p>hola@padelminasclub.uy (ficticio)</p>
+          </address>
+
+          <dl className="mt-6 space-y-1 border-t border-hueso-50/10 pt-4 text-sm">
+            {HORARIOS.map((h) => (
+              <div key={h.dia} className="flex justify-between gap-4">
+                <dt className="text-hueso-100/60">{h.dia}</dt>
+                <dd className="font-semibold text-hueso-50">{h.horas}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-white/10 min-h-[220px]">
+        <div className="relative min-h-[240px] overflow-hidden rounded-xl border border-hueso-50/15 bg-cancha-900">
+          <svg
+            className="pointer-events-none absolute inset-0 h-full w-full opacity-40"
+            viewBox="0 0 400 240"
+            preserveAspectRatio="xMidYMid slice"
+            aria-hidden="true"
+          >
+            <line x1="0" y1="60" x2="400" y2="50" stroke="#faf7f0" strokeWidth="2" />
+            <line x1="0" y1="150" x2="400" y2="165" stroke="#faf7f0" strokeWidth="2" />
+            <line x1="90" y1="0" x2="70" y2="240" stroke="#faf7f0" strokeWidth="2" />
+            <line x1="290" y1="0" x2="310" y2="240" stroke="#faf7f0" strokeWidth="1.5" />
+            <path d="M200 90c-16 0-28 12-28 27 0 20 28 46 28 46s28-26 28-46c0-15-12-27-28-27Z" fill="var(--color-ladrillo-500)" />
+            <circle cx="200" cy="117" r="10" fill="var(--color-cancha-900)" />
+          </svg>
           <iframe
             title="Ubicación aproximada — Minas, Uruguay"
             src="https://www.google.com/maps?q=Minas,+Lavalleja,+Uruguay&output=embed"
-            className="w-full h-full min-h-[220px]"
+            className="relative h-full min-h-[240px] w-full"
             style={{ border: 0 }}
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
@@ -32,9 +62,22 @@ function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-10 pt-6 border-t border-white/5 text-xs text-neutral-500 text-center">
-        Pádel Minas Club es un proyecto ficticio creado únicamente como demo de
-        portafolio. No representa a ningún club real.
+      <div className="mx-auto mt-12 max-w-6xl border-t border-hueso-50/10 px-4 pt-6 text-xs text-hueso-100/60 sm:px-6">
+        <p>
+          Pádel Minas Club es un proyecto ficticio creado únicamente como demo de portafolio. No
+          representa a ningún club real.
+        </p>
+        <p className="mt-3">
+          Sitio demo por{" "}
+          <a href={autorHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-hueso-50 underline underline-offset-2 hover:text-ladrillo-400">
+            {AUTOR.nombre}
+          </a>{" "}
+          — {AUTOR.texto}. ¿Querés una página así para tu negocio?{" "}
+          <a href={autorHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-hueso-50 underline underline-offset-2 hover:text-ladrillo-400">
+            Escribime
+          </a>
+          .
+        </p>
       </div>
     </footer>
   )
