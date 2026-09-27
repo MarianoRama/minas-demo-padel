@@ -50,7 +50,7 @@ function Hero({ reservations, onConfirmed }: HeroProps) {
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wide text-hueso-100/60">Desde</dt>
-              <dd className="font-display text-3xl font-bold text-hueso-50">${PRICE_PER_HOUR}</dd>
+              <dd className="font-display text-3xl font-bold text-hueso-50">${PRICE_PER_HOUR.toLocaleString("es-UY")}</dd>
             </div>
           </dl>
         </div>
