@@ -1,36 +1,15 @@
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { courts } from "../data/courts"
-import { HOURS, PRICE_PER_HOUR, isOccupiedByDefault } from "../data/schedule"
+import { DAYS_AHEAD, HOURS, PRICE_PER_HOUR, isOccupiedByDefault } from "../data/schedule"
 import {
+  buildDayOptions,
+  findFreeSlots,
   isPastSlot,
-  loadReservations,
-  saveReservations,
-  toDateKey,
   type Reservation,
 } from "../data/booking"
 import BookingModal from "./BookingModal"
 import MisReservas from "./MisReservas"
 import { useReveal, revealClass } from "../hooks/useReveal"
-
-interface DayOption {
-  dateKey: string
-  label: string
-  sublabel: string
-}
-
-function buildDays(): DayOption[] {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  return Array.from({ length: 7 }, (_, offset) => {
-    const date = new Date(today)
-    date.setDate(date.getDate() + offset)
-    return {
-      dateKey: toDateKey(date),
-      label: offset === 0 ? "Hoy" : offset === 1 ? "Mañana" : date.toLocaleDateString("es-UY", { weekday: "short" }),
-      sublabel: date.toLocaleDateString("es-UY", { day: "2-digit", month: "2-digit" }),
-    }
-  })
-}
 
 interface SelectedSlot {
   courtId: string
@@ -39,16 +18,24 @@ interface SelectedSlot {
 
 type SlotState = "pasado" | "ocupado" | "mia" | "libre"
 
-function Booking() {
-  const days = useMemo(() => buildDays(), [])
-  const [selectedDateKey, setSelectedDateKey] = useState(days[0].dateKey)
-  const [mobileCourtId, setMobileCourtId] = useState(courts[0].id)
-  const [reservations, setReservations] = useState<Reservation[]>(() => loadReservations())
-  const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
+interface BookingProps {
+  reservations: Reservation[]
+  onConfirmed: (reservation: Reservation) => void
+  onCancel: (id: string) => void
+}
 
-  useEffect(() => {
-    saveReservations(reservations)
-  }, [reservations])
+function Booking({ reservations, onConfirmed, onCancel }: BookingProps) {
+  const days = useMemo(() => buildDayOptions(DAYS_AHEAD), [])
+
+  // Por default abrimos en el primer día que tenga algún turno libre: así la
+  // agenda nunca "arranca" mostrando todo pasado/ocupado, sin importar la
+  // hora a la que Mariano haga la demo.
+  const [selectedDateKey, setSelectedDateKey] = useState(() => {
+    const [firstFree] = findFreeSlots(reservations, 1, DAYS_AHEAD)
+    return firstFree?.dateKey ?? days[0].dateKey
+  })
+  const [mobileCourtId, setMobileCourtId] = useState(courts[0].id)
+  const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null)
 
   function slotState(dateKey: string, courtId: string, hour: number): SlotState {
     if (isPastSlot(dateKey, hour)) return "pasado"
@@ -57,14 +44,6 @@ function Booking() {
     }
     if (isOccupiedByDefault(dateKey, courtId, hour)) return "ocupado"
     return "libre"
-  }
-
-  function handleConfirmed(reservation: Reservation) {
-    setReservations((prev) => [...prev, reservation])
-  }
-
-  function handleCancel(id: string) {
-    setReservations((prev) => prev.filter((r) => r.id !== id))
   }
 
   const selectedCourt = courts.find((c) => c.id === selectedSlot?.courtId) ?? null
@@ -252,7 +231,7 @@ function Booking() {
         </p>
 
         <div className="mt-14 border-t border-cancha-900/10 pt-10">
-          <MisReservas reservations={reservations} onCancel={handleCancel} />
+          <MisReservas reservations={reservations} onCancel={onCancel} />
         </div>
       </div>
 
@@ -262,7 +241,7 @@ function Booking() {
           dateKey={selectedDateKey}
           hour={selectedSlot.hour}
           onClose={() => setSelectedSlot(null)}
-          onConfirmed={handleConfirmed}
+          onConfirmed={onConfirmed}
         />
       )}
     </section>

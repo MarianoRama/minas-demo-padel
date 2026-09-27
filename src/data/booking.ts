@@ -1,6 +1,38 @@
 // Modelo y persistencia de reservas hechas por el visitante.
 // Todo vive en localStorage del navegador: es una demo, no hay backend.
 
+import { courts as ALL_COURTS } from "./courts"
+import { HOURS, DAYS_AHEAD, isOccupiedByDefault } from "./schedule"
+
+const CLUB_TIMEZONE = "America/Montevideo"
+
+/**
+ * El club está en Uruguay: "hoy" y "ahora" se calculan siempre en su huso
+ * horario, no en el del navegador de quien mira la demo (podría estar en
+ * cualquier parte del mundo). Truco: armamos un Date "local" con los
+ * números de reloj de Montevideo, así los getters locales (getFullYear,
+ * getHours, etc.) que ya usa el resto del código devuelven directamente la
+ * hora del club sin tener que tocar esa lógica.
+ */
+export function nowInClub(): Date {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: CLUB_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date())
+
+  const map: Record<string, string> = {}
+  for (const p of parts) map[p.type] = p.value
+
+  const hour = Number(map.hour) % 24 // "24" a medianoche con hour12:false
+  return new Date(Number(map.year), Number(map.month) - 1, Number(map.day), hour, Number(map.minute), Number(map.second))
+}
+
 export interface Reservation {
   id: string // código de reserva, ej. "PMC-7K2QF"
   dateKey: string // fecha absoluta YYYY-MM-DD (evita el bug de offsets relativos)
@@ -95,7 +127,7 @@ export function slotStart(dateKey: string, hour: number): Date {
 }
 
 /** Un turno pasó si ya empezó (aplica solo a los turnos de hoy). */
-export function isPastSlot(dateKey: string, hour: number, now: Date = new Date()): boolean {
+export function isPastSlot(dateKey: string, hour: number, now: Date = nowInClub()): boolean {
   return slotStart(dateKey, hour).getTime() <= now.getTime()
 }
 
@@ -107,6 +139,73 @@ export function formatDateLabel(dateKey: string): string {
 export function formatDateLong(dateKey: string): string {
   const d = parseDateKey(dateKey)
   return d.toLocaleDateString("es-UY", { weekday: "long", day: "2-digit", month: "long" })
+}
+
+/** "Hoy" / "Mañana" / abreviatura de día, tomando como referencia el huso del club. */
+export function dayShortLabel(dateKey: string): string {
+  const today = nowInClub()
+  today.setHours(0, 0, 0, 0)
+  const todayKey = toDateKey(today)
+  if (dateKey === todayKey) return "Hoy"
+
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  if (dateKey === toDateKey(tomorrow)) return "Mañana"
+
+  return parseDateKey(dateKey).toLocaleDateString("es-UY", { weekday: "short" })
+}
+
+export interface DayOption {
+  dateKey: string
+  label: string
+  sublabel: string
+}
+
+/** Los próximos `daysAhead` días (incluido hoy), en el huso horario del club. */
+export function buildDayOptions(daysAhead: number = DAYS_AHEAD): DayOption[] {
+  const today = nowInClub()
+  today.setHours(0, 0, 0, 0)
+  return Array.from({ length: daysAhead }, (_, offset) => {
+    const date = new Date(today)
+    date.setDate(date.getDate() + offset)
+    const dateKey = toDateKey(date)
+    return {
+      dateKey,
+      label: dayShortLabel(dateKey),
+      sublabel: date.toLocaleDateString("es-UY", { day: "2-digit", month: "2-digit" }),
+    }
+  })
+}
+
+export interface FreeSlot {
+  dateKey: string
+  courtId: string
+  hour: number
+}
+
+/**
+ * Los próximos turnos libres, en orden cronológico, mirando primero hoy y
+ * después los días siguientes. Sirve tanto para el widget del hero como
+ * para elegir el día que la agenda abre por default.
+ */
+export function findFreeSlots(reservations: Reservation[], limit: number, daysAhead: number = DAYS_AHEAD): FreeSlot[] {
+  const mine = new Set(reservations.map((r) => `${r.dateKey}|${r.courtId}|${r.hour}`))
+  const days = buildDayOptions(daysAhead)
+  const result: FreeSlot[] = []
+
+  for (const day of days) {
+    for (const hour of HOURS) {
+      if (isPastSlot(day.dateKey, hour)) continue
+      for (const court of ALL_COURTS) {
+        const key = `${day.dateKey}|${court.id}|${hour}`
+        if (mine.has(key)) continue
+        if (isOccupiedByDefault(day.dateKey, court.id, hour)) continue
+        result.push({ dateKey: day.dateKey, courtId: court.id, hour })
+        if (result.length >= limit) return result
+      }
+    }
+  }
+  return result
 }
 
 // --- Validación de datos de contacto ---
