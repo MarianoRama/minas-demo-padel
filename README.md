@@ -1,23 +1,19 @@
 # Pádel Minas Club — Demo de portafolio
 
-Landing page **demo** para mostrar a dueños de clubes/canchas de pádel en
-Minas, Uruguay lo que un freelancer puede ofrecer: sitio moderno y responsive
-más un sistema de reserva de turnos funcional en el frontend.
+Landing page **demo** para mostrar una propuesta de sitio responsive para un
+club de pádel en Minas, Uruguay, con consultas de horarios por WhatsApp.
 
 "Pádel Minas Club" es un **club ficticio**, creado solo para esta demo. No
 representa a ningún negocio real.
 
-## ⚠️ Importante: la agenda es solo frontend
+## La agenda es ilustrativa
 
-La sección "Reservar" simula una agenda real, pero **no hay backend**:
-
-- Los turnos "ocupados" son datos de ejemplo hardcodeados en
-  `src/data/schedule.ts`.
-- Al reservar un turno disponible, la reserva se guarda con `useState` y se
-  persiste en `localStorage` del navegador (para que sobreviva un refresh).
-- No hay servidor, base de datos, ni envío real de confirmaciones. Es una
-  demostración de experiencia de usuario, pensada para mostrarse en una
-  reunión comercial.
+La persona elige fecha, cancha y hora y puede preparar una consulta. WhatsApp
+se habilita al configurar el número real del negocio mediante
+`VITE_WHATSAPP_NUMBER` (formato internacional, solo dígitos: `598` seguido de
+ocho dígitos). Sin ese dato, el mensaje queda disponible para copiar. Los
+horarios son ejemplos: no hay disponibilidad en tiempo real ni se confirman
+reservas.
 
 ## Stack
 
@@ -27,7 +23,7 @@ La sección "Reservar" simula una agenda real, pero **no hay backend**:
 ## Cómo correrlo
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -42,12 +38,11 @@ npm run preview
 
 ## Estructura
 
-- `src/components/` — Header, Hero, Courts, Booking (agenda), Pricing,
+- `src/components/` — Header, Hero, Courts, Booking (consultas), Pricing,
   WhatsAppButton, Footer.
-- `src/data/` — datos de ejemplo: canchas y turnos ocupados hardcodeados.
+- `src/data/` — canchas, horarios y precios ilustrativos.
 
 ## Datos de ejemplo
 
-Todos los datos (nombre del club, canchas, precios, número de WhatsApp
-`+598 99 000 000`, dirección) son **ficticios**, solo para ilustrar el
-diseño y la funcionalidad.
+Los datos de ejemplo, incluidos nombre del club, canchas, precios y dirección,
+son **ficticios**, solo para ilustrar el diseño y la funcionalidad.

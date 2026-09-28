@@ -22,18 +22,18 @@ function Hero() {
           Minas, Uruguay
         </span>
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white leading-tight">
-          Jugá al pádel como se debe
+          Tu próximo partido empieza acá
         </h1>
         <p className="mt-6 text-lg sm:text-xl text-neutral-300 max-w-2xl mx-auto">
-          Canchas de primer nivel, reserva online en segundos y el mejor ambiente
-          de la ciudad. Elegí tu horario y armá el partido.
+          Un lugar para encontrarse, jugar y volver a la cancha. Consultá por
+          horarios y coordiná tu partido por WhatsApp.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
           <a
             href="#reservar"
             className="inline-flex items-center justify-center rounded-full bg-green-500 px-8 py-3.5 text-base font-semibold text-neutral-950 hover:bg-green-400 transition-colors shadow-lg shadow-green-500/20 w-full sm:w-auto"
           >
-            Reservá tu cancha
+            Consultá un horario
           </a>
           <a
             href="#canchas"

@@ -1,7 +1,7 @@
 const NAV_ITEMS = [
   { label: "Inicio", href: "#inicio" },
   { label: "Canchas", href: "#canchas" },
-  { label: "Reservar", href: "#reservar" },
+  { label: "Horarios", href: "#reservar" },
   { label: "Precios", href: "#precios" },
   { label: "Contacto", href: "#contacto" },
 ]
@@ -35,7 +35,7 @@ function Header() {
           href="#reservar"
           className="hidden sm:inline-flex items-center rounded-full bg-green-500 px-4 py-2 text-sm font-semibold text-neutral-950 hover:bg-green-400 transition-colors"
         >
-          Reservar
+          Consultar
         </a>
       </div>
 

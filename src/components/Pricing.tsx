@@ -29,7 +29,8 @@ function Pricing() {
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-white">Precios</h2>
           <p className="mt-3 text-neutral-400 max-w-xl mx-auto">
-            Precios de ejemplo en pesos uruguayos, orientativos para esta demo.
+          Valores ilustrativos en pesos uruguayos para esta demo; consultá las
+          condiciones antes de jugar.
           </p>
         </div>
 
@@ -68,7 +69,7 @@ function Pricing() {
                     : "bg-green-500 text-neutral-950 hover:bg-green-400"
                 }`}
               >
-                Reservar
+                Consultar horarios
               </a>
             </div>
           ))}

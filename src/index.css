@@ -2,10 +2,31 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 8rem;
 }
 
 body {
   margin: 0;
   font-family: system-ui, "Segoe UI", Roboto, sans-serif;
   background-color: #0f1712;
+}
+
+:focus-visible {
+  outline: 3px solid #86efac;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

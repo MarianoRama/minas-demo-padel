@@ -10,19 +10,17 @@ function Footer() {
             <span className="text-white font-bold text-lg">Pádel Minas Club</span>
           </div>
           <p className="text-sm text-neutral-400 max-w-sm">
-            Club ficticio de ejemplo para una demo de portafolio. Ubicado en
-            Minas, Uruguay.
+            Demo de portafolio para un club ficticio en Minas, Lavalleja.
           </p>
           <div className="mt-6 space-y-1 text-sm text-neutral-400">
-            <p>📍 Ruta 8 km 121, Minas, Lavalleja, Uruguay</p>
-            <p>📞 +598 99 000 000</p>
-            <p>✉️ hola@padelminasclub.uy (ficticio)</p>
+            <p>📍 Minas, Lavalleja, Uruguay</p>
+            <p>WhatsApp disponible al configurar un número real del club.</p>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-white/10 min-h-[220px]">
           <iframe
-            title="Ubicación aproximada — Minas, Uruguay"
+            title="Mapa de referencia de Minas, Lavalleja; no indica la ubicación de un club real"
             src="https://www.google.com/maps?q=Minas,+Lavalleja,+Uruguay&output=embed"
             className="w-full h-full min-h-[220px]"
             style={{ border: 0 }}

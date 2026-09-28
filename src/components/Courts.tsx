@@ -7,8 +7,8 @@ function Courts() {
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-bold text-white">Nuestras canchas</h2>
           <p className="mt-3 text-neutral-400 max-w-xl mx-auto">
-            Tres canchas pensadas para que juegues en las mejores condiciones,
-            llueva o haga sol.
+            Conocé las opciones de cancha y escribinos para consultar cuál se
+            ajusta a tu partido.
           </p>
         </div>
 
