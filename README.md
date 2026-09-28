@@ -1,19 +1,26 @@
 # Pádel Minas Club — Demo de portafolio
 
-Landing page **demo** para mostrar una propuesta de sitio responsive para un
-club de pádel en Minas, Uruguay, con consultas de horarios por WhatsApp.
+Landing page **demo** para un club ficticio en Minas, Uruguay. Permite elegir
+cancha, proponer fecha y hora, revisar una solicitud y enviarla por WhatsApp
+cuando se configura un contacto real.
 
 "Pádel Minas Club" es un **club ficticio**, creado solo para esta demo. No
 representa a ningún negocio real.
 
-## La agenda es ilustrativa
+## Reservas y membresías
 
-La persona elige fecha, cancha y hora y puede preparar una consulta. WhatsApp
-se habilita al configurar el número real del negocio mediante
-`VITE_WHATSAPP_NUMBER` (formato internacional, solo dígitos: `598` seguido de
-ocho dígitos). Sin ese dato, el mensaje queda disponible para copiar. Los
-horarios son ejemplos: no hay disponibilidad en tiempo real ni se confirman
-reservas.
+El formulario prepara una solicitud con cancha, fecha, hora y datos de
+contacto. No consulta disponibilidad ni confirma una reserva. Sin un número
+real en `VITE_WHATSAPP_NUMBER`, el mensaje se muestra para copiar.
+
+No se publican paquetes ni precios de membresía de ejemplo. La página explica
+el circuito esperado: consulta, pago verificado, acreditación de saldo y
+descuento al confirmar la reserva. Este demo no procesa pagos ni acredita
+créditos. Ver [ARCHITECTURE.md](ARCHITECTURE.md) para una propuesta mínima de
+integración real.
+
+La foto de la portada es ilustrativa y no corresponde al club: Ashford Marx,
+[Unsplash](https://unsplash.com/photos/Stb4Tx7YqXI).
 
 ## Stack
 
@@ -38,9 +45,9 @@ npm run preview
 
 ## Estructura
 
-- `src/components/` — Header, Hero, Courts, Booking (consultas), Pricing,
+- `src/components/` — Header, Hero, Courts, BookingRequest, Memberships,
   WhatsAppButton, Footer.
-- `src/data/` — canchas, horarios y precios ilustrativos.
+- `src/data/` — canchas y horarios de referencia.
 
 ## Datos de ejemplo
 

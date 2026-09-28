@@ -1,13 +1,10 @@
-const configuredWhatsAppNumber = import.meta.env.VITE_WHATSAPP_NUMBER?.replace(/\D/g, "") ?? ""
-const WHATSAPP_NUMBER = /^598\d{8}$/.test(configuredWhatsAppNumber)
-  ? configuredWhatsAppNumber
-  : ""
+import { whatsappLink } from "../lib/contact"
+
 const WHATSAPP_MESSAGE = "Hola, quisiera consultar por las canchas y los horarios. (Demo Pádel Minas Club)"
 
 function WhatsAppButton() {
-  if (!WHATSAPP_NUMBER) return null
-
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
+  const href = whatsappLink(WHATSAPP_MESSAGE)
+  if (!href) return null
 
   return (
     <a

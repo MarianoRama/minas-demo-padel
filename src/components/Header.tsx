@@ -2,7 +2,7 @@ const NAV_ITEMS = [
   { label: "Inicio", href: "#inicio" },
   { label: "Canchas", href: "#canchas" },
   { label: "Horarios", href: "#reservar" },
-  { label: "Precios", href: "#precios" },
+  { label: "Membresías", href: "#precios" },
   { label: "Contacto", href: "#contacto" },
 ]
 
