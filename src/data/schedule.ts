@@ -22,7 +22,7 @@ function hashToUnit(input: string): number {
 
 /** Turnos de ejemplo ya "ocupados" para una fecha (YYYY-MM-DD) dada. */
 export function isOccupiedByDefault(dateKey: string, courtId: string, hour: number): boolean {
-  const threshold = isPeakHour(hour) ? 0.62 : 0.3
+  const threshold = isPeakHour(hour) ? 0.45 : 0.15
   return hashToUnit(`${dateKey}|${courtId}|${hour}`) < threshold
 }
 
