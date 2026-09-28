@@ -45,3 +45,11 @@ se consume. No se debe editar el saldo a mano ni activarlo desde el navegador.
 - Conectar el botón de WhatsApp solo cuando el club entregue un número real.
 - Elegir proveedor de pagos y calendario con el club antes de implementar la
   integración; no hay un proveedor conectado en este demo.
+
+## Identidad y área privada
+
+Una membresía real empieza con registro o inicio de sesión y correo verificado. El saldo y las reservas deben pertenecer al identificador de esa cuenta, nunca al nombre escrito en un formulario ni a datos modificables en el navegador. Cada consulta debe autorizarse en el servidor: un socio solo ve sus reservas, mientras que el personal autorizado puede administrar la agenda. Cerrar sesión debe retirar de pantalla los datos privados.
+
+Flujo: cuenta verificada → pago pendiente → pago validado en el servidor → saldo disponible → reserva confirmada. Una vuelta del navegador desde una pantalla de pago no prueba que se pagó. La implementación requiere un servicio de autenticación y una base de datos conectados; GitHub Pages solo sirve la interfaz. La demo pública no incluye todavía ese servicio y no ofrece una pantalla de acceso ficticia.
+
+Referencias evaluadas: https://github.com/supabase/supabase/tree/master/examples/user-management y https://github.com/nextjs/saas-starter. Son ejemplos de arquitectura, no integraciones ya realizadas. El antiguo https://github.com/vercel/nextjs-subscription-payments está archivado y no se propone como base nueva.
