@@ -1,12 +1,13 @@
 import { AUTOR } from "../config"
+import type { Horario, Negocio } from "../data/types"
+import { DIA_LABEL } from "../data/types"
 
-const HORARIOS = [
-  { dia: "Lunes a viernes", horas: "8:00 – 23:00" },
-  { dia: "Sábados", horas: "9:00 – 23:00" },
-  { dia: "Domingos y feriados", horas: "9:00 – 21:00" },
-]
+interface FooterProps {
+  negocio: Negocio
+  horario: Horario
+}
 
-function Footer() {
+function Footer({ negocio, horario }: FooterProps) {
   const autorHref = `https://wa.me/${AUTOR.whatsapp}?text=${encodeURIComponent(
     "Hola Mariano! Vi la demo de Pádel Minas Club y quiero una página así para mi negocio."
   )}`
@@ -15,29 +16,28 @@ function Footer() {
     <footer id="llegar" className="bg-cancha-950 pb-28 pt-16 text-hueso-100 sm:pb-14">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 sm:px-6 md:grid-cols-2">
         <div>
-          <p className="font-display text-sm font-bold uppercase tracking-[0.25em] text-ladrillo-400">
+          <h2 className="font-display text-3xl font-black uppercase tracking-tight text-hueso-50">
             Cómo llegar
-          </p>
-          <h2 className="mt-2 font-display text-3xl font-black uppercase tracking-tight text-hueso-50">
-            Pádel Minas Club
           </h2>
           <address className="mt-4 space-y-1 text-sm not-italic text-hueso-100/80">
-            <p>Ruta 8 km 121, frente al Parque Salus — Minas, Lavalleja</p>
-            <p>Tel. +598 99 000 000 (WhatsApp)</p>
+            <p>{negocio.direccion}</p>
+            <p>Tel. +{negocio.whatsapp.replace(/^0+/, "")} (WhatsApp)</p>
             <p>hola@padelminasclub.uy (ficticio)</p>
           </address>
 
           <dl className="mt-6 space-y-1 border-t border-hueso-50/10 pt-4 text-sm">
-            {HORARIOS.map((h) => (
-              <div key={h.dia} className="flex justify-between gap-4">
-                <dt className="text-hueso-100/60">{h.dia}</dt>
-                <dd className="font-semibold text-hueso-50">{h.horas}</dd>
+            {horario.dias.map((d) => (
+              <div key={d.dia} className="flex justify-between gap-4">
+                <dt className="capitalize text-hueso-100/60">{DIA_LABEL[d.dia]}</dt>
+                <dd className="font-semibold text-hueso-50">
+                  {d.cerrado ? "Cerrado" : `${d.apertura} – ${d.cierre}`}
+                </dd>
               </div>
             ))}
           </dl>
         </div>
 
-        <div className="relative min-h-[240px] overflow-hidden rounded-xl border border-hueso-50/15 bg-cancha-900">
+        <div className="relative min-h-[240px] overflow-hidden border border-hueso-50/15 bg-cancha-900">
           <svg
             className="pointer-events-none absolute inset-0 h-full w-full opacity-40"
             viewBox="0 0 400 240"
@@ -52,7 +52,7 @@ function Footer() {
             <circle cx="200" cy="117" r="10" fill="var(--color-cancha-900)" />
           </svg>
           <iframe
-            title="Ubicación aproximada — Minas, Uruguay"
+            title="Ubicación aproximada, Minas, Uruguay"
             src="https://www.google.com/maps?q=Minas,+Lavalleja,+Uruguay&output=embed"
             className="relative h-full min-h-[240px] w-full"
             style={{ border: 0 }}
@@ -72,11 +72,16 @@ function Footer() {
           <a href={autorHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-hueso-50 underline underline-offset-2 hover:text-ladrillo-400">
             {AUTOR.nombre}
           </a>{" "}
-          — {AUTOR.texto}. ¿Querés una página así para tu negocio?{" "}
+          ({AUTOR.texto}). ¿Querés una página así para tu negocio?{" "}
           <a href={autorHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-hueso-50 underline underline-offset-2 hover:text-ladrillo-400">
             Escribime
           </a>
           .
+        </p>
+        <p className="mt-3">
+          <a href="#/admin" className="underline underline-offset-2 hover:text-hueso-50">
+            Administrar sitio
+          </a>
         </p>
       </div>
     </footer>

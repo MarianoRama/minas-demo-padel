@@ -1,28 +1,41 @@
-import { useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import Dialog from "./Dialog"
-import { courts } from "../data/courts"
+import type { Cancha } from "../data/types"
 import { formatDateLabel, isPastSlot, type Reservation } from "../data/booking"
+import Pagination from "./Pagination"
+import { scrollToNode } from "../utils/scroll"
 
 interface MisReservasProps {
   reservations: Reservation[]
+  canchas: Cancha[]
   onCancel: (id: string) => void
 }
 
-function courtName(id: string): string {
-  return courts.find((c) => c.id === id)?.name ?? id
-}
+const PAGE_SIZE = 6
 
-function MisReservas({ reservations, onCancel }: MisReservasProps) {
+function MisReservas({ reservations, canchas, onCancel }: MisReservasProps) {
   const [toCancel, setToCancel] = useState<Reservation | null>(null)
+  const [page, setPage] = useState(1)
+  const listRef = useRef<HTMLDivElement>(null)
 
-  const ordenadas = [...reservations].sort((a, b) => {
-    const ka = `${a.dateKey}${String(a.hour).padStart(2, "0")}`
-    const kb = `${b.dateKey}${String(b.hour).padStart(2, "0")}`
-    return ka.localeCompare(kb)
-  })
+  function courtName(id: string): string {
+    return canchas.find((c) => c.id === id)?.nombre ?? id
+  }
+
+  const ordenadas = useMemo(
+    () =>
+      [...reservations].sort((a, b) => {
+        const ka = `${a.dateKey}${String(a.hour).padStart(2, "0")}`
+        const kb = `${b.dateKey}${String(b.hour).padStart(2, "0")}`
+        return ka.localeCompare(kb)
+      }),
+    [reservations]
+  )
+
+  const pagina = ordenadas.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div>
+    <div ref={listRef}>
       <h3 className="font-display text-xl font-bold uppercase tracking-wide text-cancha-900">
         Mis reservas
       </h3>
@@ -31,17 +44,17 @@ function MisReservas({ reservations, onCancel }: MisReservasProps) {
       </p>
 
       {ordenadas.length === 0 ? (
-        <p className="mt-4 rounded-lg border border-dashed border-cancha-900/20 px-4 py-6 text-center text-sm text-ink-500">
+        <p className="mt-4 border border-dashed border-cancha-900/20 px-4 py-6 text-center text-sm text-ink-500">
           Todavía no reservaste ningún turno.
         </p>
       ) : (
         <ul className="mt-4 space-y-2.5">
-          {ordenadas.map((r) => {
+          {pagina.map((r) => {
             const pasado = isPastSlot(r.dateKey, r.hour)
             return (
               <li
                 key={r.id}
-                className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 ${
+                className={`flex items-center justify-between gap-3 border px-4 py-3 ${
                   pasado ? "border-ink-500/10 opacity-60" : "border-cancha-900/15 bg-hueso-50"
                 }`}
               >
@@ -57,7 +70,7 @@ function MisReservas({ reservations, onCancel }: MisReservasProps) {
                   <button
                     type="button"
                     onClick={() => setToCancel(r)}
-                    className="shrink-0 rounded-md border border-ladrillo-600/50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-ladrillo-600 hover:bg-ladrillo-600 hover:text-hueso-50"
+                    className="shrink-0 border border-ladrillo-600/50 px-3 py-2 text-xs font-bold uppercase tracking-wide text-ladrillo-600 hover:bg-ladrillo-600 hover:text-hueso-50"
                   >
                     Cancelar
                   </button>
@@ -68,20 +81,31 @@ function MisReservas({ reservations, onCancel }: MisReservasProps) {
         </ul>
       )}
 
+      <Pagination
+        page={page}
+        pageSize={PAGE_SIZE}
+        totalItems={ordenadas.length}
+        label="Páginas de mis reservas"
+        onPageChange={(p) => {
+          setPage(p)
+          scrollToNode(listRef.current)
+        }}
+      />
+
       {toCancel && (
         <Dialog title="Cancelar reserva" onClose={() => setToCancel(null)}>
           <h2 className="font-display text-xl font-bold uppercase tracking-wide text-cancha-900">
             ¿Cancelar esta reserva?
           </h2>
           <p className="mt-2 text-sm text-ink-700">
-            {courtName(toCancel.courtId)} — {formatDateLabel(toCancel.dateKey)} a las {toCancel.hour}:00.
+            {courtName(toCancel.courtId)} · {formatDateLabel(toCancel.dateKey)} a las {toCancel.hour}:00.
             Esta acción no se puede deshacer.
           </p>
           <div className="mt-6 flex flex-col-reverse gap-2.5 sm:flex-row">
             <button
               type="button"
               onClick={() => setToCancel(null)}
-              className="flex min-h-[48px] flex-1 items-center justify-center rounded-md border border-cancha-900/20 text-sm font-bold text-ink-700"
+              className="flex min-h-[48px] flex-1 items-center justify-center border border-cancha-900/20 text-sm font-bold text-ink-700"
             >
               Volver
             </button>
@@ -91,7 +115,7 @@ function MisReservas({ reservations, onCancel }: MisReservasProps) {
                 onCancel(toCancel.id)
                 setToCancel(null)
               }}
-              className="flex min-h-[48px] flex-1 items-center justify-center rounded-md bg-ladrillo-600 text-sm font-bold text-hueso-50 hover:bg-ladrillo-700"
+              className="flex min-h-[48px] flex-1 items-center justify-center bg-ladrillo-600 text-sm font-bold text-hueso-50 hover:bg-ladrillo-700"
             >
               Sí, cancelar
             </button>

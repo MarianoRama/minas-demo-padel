@@ -1,8 +1,11 @@
-const WHATSAPP_NUMBER = "59899000000" // Número de ejemplo (placeholder)
 const WHATSAPP_MESSAGE = "Hola! Quería consultar sobre las canchas de Pádel Minas Club."
 
-function WhatsAppButton() {
-  const href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
+interface WhatsAppButtonProps {
+  whatsapp: string
+}
+
+function WhatsAppButton({ whatsapp }: WhatsAppButtonProps) {
+  const href = `https://wa.me/${whatsapp}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
 
   return (
     <a

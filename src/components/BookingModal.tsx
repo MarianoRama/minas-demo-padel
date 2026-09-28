@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react"
 import Dialog from "./Dialog"
-import type { Court } from "../data/courts"
-import { PRICE_PER_HOUR } from "../data/schedule"
+import type { Cancha } from "../data/types"
 import {
   buildIcs,
   buildWhatsAppMessage,
@@ -14,14 +13,17 @@ import {
 } from "../data/booking"
 
 interface BookingModalProps {
-  court: Court
+  court: Cancha
   dateKey: string
   hour: number
+  precio: number
+  duracionMin: number
+  horaFinLabel: string
   onClose: () => void
   onConfirmed: (reservation: Reservation) => void
 }
 
-function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingModalProps) {
+function BookingModal({ court, dateKey, hour, precio, duracionMin, horaFinLabel, onClose, onConfirmed }: BookingModalProps) {
   const [name, setName] = useState("")
   const [phone, setPhone] = useState("")
   const [nameError, setNameError] = useState<string | null>(null)
@@ -50,7 +52,7 @@ function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingMod
   }
 
   if (result) {
-    const waHref = `https://wa.me/?text=${encodeURIComponent(buildWhatsAppMessage(result, court.name))}`
+    const waHref = `https://wa.me/?text=${encodeURIComponent(buildWhatsAppMessage(result, court.nombre))}`
     return (
       <Dialog title="Turno confirmado" onClose={onClose}>
         <div className="text-center">
@@ -71,7 +73,7 @@ function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingMod
         <dl className="mt-6 space-y-2 rounded-lg bg-hueso-100 p-4 text-sm">
           <div className="flex justify-between">
             <dt className="text-ink-500">Cancha</dt>
-            <dd className="font-semibold text-ink-900">{court.name}</dd>
+            <dd className="font-semibold text-ink-900">{court.nombre}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-ink-500">Día</dt>
@@ -79,11 +81,11 @@ function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingMod
           </div>
           <div className="flex justify-between">
             <dt className="text-ink-500">Hora</dt>
-            <dd className="font-semibold text-ink-900">{hour}:00 a {hour + 1}:00</dd>
+            <dd className="font-semibold text-ink-900">{hour}:00 a {horaFinLabel}</dd>
           </div>
           <div className="flex justify-between">
             <dt className="text-ink-500">Precio</dt>
-            <dd className="font-semibold text-ink-900">${PRICE_PER_HOUR}</dd>
+            <dd className="font-semibold text-ink-900">${precio.toLocaleString("es-UY")}</dd>
           </div>
         </dl>
 
@@ -101,7 +103,7 @@ function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingMod
           </a>
           <button
             type="button"
-            onClick={() => downloadIcs(`turno-${result.id}.ics`, buildIcs(result, court.name))}
+            onClick={() => downloadIcs(`turno-${result.id}.ics`, buildIcs(result, court.nombre, duracionMin))}
             className="flex min-h-[48px] items-center justify-center gap-2 rounded-md border border-cancha-900/20 text-sm font-bold text-cancha-900"
           >
             Agregar a calendario
@@ -127,7 +129,7 @@ function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingMod
       <dl className="mt-4 space-y-2 rounded-lg bg-hueso-100 p-4 text-sm">
         <div className="flex justify-between">
           <dt className="text-ink-500">Cancha</dt>
-          <dd className="font-semibold text-ink-900">{court.name}</dd>
+          <dd className="font-semibold text-ink-900">{court.nombre}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-ink-500">Día</dt>
@@ -135,11 +137,11 @@ function BookingModal({ court, dateKey, hour, onClose, onConfirmed }: BookingMod
         </div>
         <div className="flex justify-between">
           <dt className="text-ink-500">Hora</dt>
-          <dd className="font-semibold text-ink-900">{hour}:00 a {hour + 1}:00</dd>
+          <dd className="font-semibold text-ink-900">{hour}:00 a {horaFinLabel}</dd>
         </div>
         <div className="flex justify-between">
           <dt className="text-ink-500">Precio</dt>
-          <dd className="font-semibold text-ink-900">${PRICE_PER_HOUR}</dd>
+          <dd className="font-semibold text-ink-900">${precio.toLocaleString("es-UY")}</dd>
         </div>
       </dl>
 

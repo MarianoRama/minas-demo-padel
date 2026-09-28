@@ -4,7 +4,8 @@ const NAV_ITEMS = [
   { label: "Agenda", href: "#agenda" },
   { label: "Canchas", href: "#canchas" },
   { label: "Precios", href: "#precios" },
-  { label: "Clases", href: "#clases" },
+  { label: "Clases y torneos", href: "#clases" },
+  { label: "Ranking", href: "#ranking" },
   { label: "Cómo llegar", href: "#llegar" },
   { label: "Preguntas", href: "#preguntas" },
 ]

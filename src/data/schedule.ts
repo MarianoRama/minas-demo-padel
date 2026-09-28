@@ -1,9 +1,6 @@
-// Horario de la agenda: de 9:00 a 23:00, turnos de una hora.
-export const HOURS: number[] = Array.from({ length: 14 }, (_, i) => i + 9) // 9..22 (último turno 22:00-23:00)
+import type { HorarioDia } from "./types"
 
 export const DAYS_AHEAD = 7
-
-export const PRICE_PER_HOUR = 1200
 
 export function isPeakHour(hour: number): boolean {
   return hour >= 18 && hour <= 21
@@ -27,4 +24,42 @@ function hashToUnit(input: string): number {
 export function isOccupiedByDefault(dateKey: string, courtId: string, hour: number): boolean {
   const threshold = isPeakHour(hour) ? 0.62 : 0.3
   return hashToUnit(`${dateKey}|${courtId}|${hour}`) < threshold
+}
+
+function toMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(":").map(Number)
+  return h * 60 + (m || 0)
+}
+
+/** Las horas de inicio de turno posibles para un día del horario del club
+ * (de apertura a cierre, en pasos de 1 hora; el último turno tiene que
+ * terminar antes o justo al cierre). */
+export function buildHoursForDay(horarioDia: HorarioDia | undefined): number[] {
+  if (!horarioDia || horarioDia.cerrado) return []
+  const desde = Math.ceil(toMinutes(horarioDia.apertura) / 60)
+  const hasta = Math.floor(toMinutes(horarioDia.cierre) / 60)
+  const horas: number[] = []
+  for (let h = desde; h < hasta; h++) horas.push(h)
+  return horas
+}
+
+export function formatHora(hhmm: string): string {
+  return hhmm
+}
+
+export function endLabel(hour: number, duracionMin: number): string {
+  const totalMin = hour * 60 + duracionMin
+  const h = Math.floor(totalMin / 60) % 24
+  const m = totalMin % 60
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`
+}
+
+export function precioPorTurno(precioPorHora: number, duracionMin: number): number {
+  return Math.round(precioPorHora * (duracionMin / 60))
+}
+
+/** Extrae el número de un precio en texto libre, ej. "$1.200" -> 1200. */
+export function parsePrecio(precioTexto: string): number {
+  const digits = precioTexto.replace(/[^\d]/g, "")
+  return digits ? Number(digits) : 0
 }

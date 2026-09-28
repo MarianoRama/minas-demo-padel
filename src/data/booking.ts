@@ -1,8 +1,33 @@
 // Modelo y persistencia de reservas hechas por el visitante.
 // Todo vive en localStorage del navegador: es una demo, no hay backend.
 
-import { courts as ALL_COURTS } from "./courts"
-import { HOURS, DAYS_AHEAD, isOccupiedByDefault } from "./schedule"
+import type { Bloqueo, Cancha, Horario } from "./types"
+import { DAYS_AHEAD, buildHoursForDay, isOccupiedByDefault } from "./schedule"
+
+const DIA_POR_INDICE: Horario["dias"][number]["dia"][] = [
+  "domingo",
+  "lunes",
+  "martes",
+  "miercoles",
+  "jueves",
+  "viernes",
+  "sabado",
+]
+
+export function horarioDelDia(horario: Horario, date: Date) {
+  const dia = DIA_POR_INDICE[date.getDay()]
+  return horario.dias.find((d) => d.dia === dia)
+}
+
+export function isBlocked(bloqueos: Bloqueo[], dateKey: string, courtId: string, hour: number): boolean {
+  return bloqueos.some(
+    (b) =>
+      b.dateKey === dateKey &&
+      (b.courtId === null || b.courtId === courtId) &&
+      hour >= b.horaDesde &&
+      hour <= b.horaHasta
+  )
+}
 
 const CLUB_TIMEZONE = "America/Montevideo"
 
@@ -188,18 +213,27 @@ export interface FreeSlot {
  * después los días siguientes. Sirve tanto para el widget del hero como
  * para elegir el día que la agenda abre por default.
  */
-export function findFreeSlots(reservations: Reservation[], limit: number, daysAhead: number = DAYS_AHEAD): FreeSlot[] {
+export function findFreeSlots(
+  reservations: Reservation[],
+  canchas: Cancha[],
+  horario: Horario,
+  bloqueos: Bloqueo[],
+  limit: number,
+  daysAhead: number = DAYS_AHEAD
+): FreeSlot[] {
   const mine = new Set(reservations.map((r) => `${r.dateKey}|${r.courtId}|${r.hour}`))
   const days = buildDayOptions(daysAhead)
   const result: FreeSlot[] = []
 
   for (const day of days) {
-    for (const hour of HOURS) {
+    const horas = buildHoursForDay(horarioDelDia(horario, parseDateKey(day.dateKey)))
+    for (const hour of horas) {
       if (isPastSlot(day.dateKey, hour)) continue
-      for (const court of ALL_COURTS) {
+      for (const court of canchas) {
         const key = `${day.dateKey}|${court.id}|${hour}`
         if (mine.has(key)) continue
         if (isOccupiedByDefault(day.dateKey, court.id, hour)) continue
+        if (isBlocked(bloqueos, day.dateKey, court.id, hour)) continue
         result.push({ dateKey: day.dateKey, courtId: court.id, hour })
         if (result.length >= limit) return result
       }
@@ -245,9 +279,9 @@ function icsDate(d: Date): string {
   )
 }
 
-export function buildIcs(res: Reservation, courtName: string): string {
+export function buildIcs(res: Reservation, courtName: string, duracionMin: number = 60): string {
   const start = slotStart(res.dateKey, res.hour)
-  const end = new Date(start.getTime() + 60 * 60 * 1000)
+  const end = new Date(start.getTime() + duracionMin * 60 * 1000)
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
@@ -257,7 +291,7 @@ export function buildIcs(res: Reservation, courtName: string): string {
     `DTSTAMP:${icsDate(new Date())}`,
     `DTSTART:${icsDate(start)}`,
     `DTEND:${icsDate(end)}`,
-    `SUMMARY:Turno de pádel — ${courtName}`,
+    `SUMMARY:Turno de pádel: ${courtName}`,
     `DESCRIPTION:Reserva ${res.id} a nombre de ${res.name}. Pádel Minas Club (demo\\, no es un club real).`,
     "LOCATION:Pádel Minas Club\\, Minas\\, Lavalleja",
     "END:VEVENT",
