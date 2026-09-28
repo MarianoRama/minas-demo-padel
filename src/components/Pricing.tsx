@@ -1,78 +1,64 @@
-const PLANS = [
-  {
-    name: "Por hora",
-    price: "$1.200",
-    period: "/ turno de 1 hora",
-    features: ["Cancha a elección", "Paletas de préstamo", "Vestuarios incluidos"],
-    highlighted: false,
-  },
-  {
-    name: "Bono 10 turnos",
-    price: "$10.500",
-    period: "/ paquete de 10 horas",
-    features: ["Ahorrás vs. pago por hora", "Válido 3 meses", "Reserva prioritaria"],
-    highlighted: true,
-  },
-  {
-    name: "Socio mensual",
-    price: "$3.900",
-    period: "/ mes",
-    features: ["4 horas de cancha incluidas", "Descuento en horas extra", "Acceso a torneos internos"],
-    highlighted: false,
-  },
-]
+import type { Precio } from "../data/types"
+import { useReveal, revealClass } from "../hooks/useReveal"
 
-function Pricing() {
+interface PricingProps {
+  precios: Precio[]
+}
+
+function Pricing({ precios }: PricingProps) {
+  const { ref: headRef, visible: headVisible } = useReveal<HTMLDivElement>()
+  const { ref: boardRef, visible: boardVisible } = useReveal<HTMLDivElement>(70)
+
   return (
-    <section id="precios" className="bg-neutral-950 py-20 sm:py-24">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white">Precios</h2>
-          <p className="mt-3 text-neutral-400 max-w-xl mx-auto">
-            Precios de ejemplo en pesos uruguayos, orientativos para esta demo.
+    <section id="precios" className="bg-cancha-950 py-16 sm:py-24">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6">
+        <div ref={headRef} className={`reveal max-w-xl ${revealClass(headVisible)}`}>
+          <h2 className="font-display text-4xl font-black uppercase tracking-tight text-hueso-50 sm:text-5xl">
+            Lo que sale jugar
+          </h2>
+          <p className="mt-3 text-base text-hueso-100/75">
+            El pizarrón de la entrada, tal cual lo tenemos colgado. Precios de
+            referencia en pesos uruguayos; el bono y la membresía se pagan por
+            transferencia o en caja.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {PLANS.map((plan) => (
-            <div
-              key={plan.name}
-              className={`rounded-2xl p-8 border flex flex-col ${
-                plan.highlighted
-                  ? "bg-green-500 border-green-400 text-neutral-950 sm:-translate-y-2 shadow-xl shadow-green-500/20"
-                  : "bg-neutral-900 border-white/10 text-white"
-              }`}
-            >
-              <h3 className="text-lg font-semibold">{plan.name}</h3>
-              <div className="mt-4">
-                <span className="text-3xl font-extrabold">{plan.price}</span>
-                <span
-                  className={`text-sm ml-1 ${plan.highlighted ? "text-neutral-900/70" : "text-neutral-400"}`}
-                >
-                  {plan.period}
-                </span>
-              </div>
-              <ul className="mt-6 space-y-2 flex-1">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="text-sm flex items-start gap-2">
-                    <span>✓</span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="#reservar"
-                className={`mt-8 inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold transition-colors ${
-                  plan.highlighted
-                    ? "bg-neutral-950 text-white hover:bg-neutral-800"
-                    : "bg-green-500 text-neutral-950 hover:bg-green-400"
-                }`}
+        <div
+          ref={boardRef}
+          className={`reveal pizarron mt-10 px-6 py-8 sm:px-10 sm:py-10 ${revealClass(boardVisible)}`}
+        >
+          <div className="divide-y divide-hueso-50/15">
+            {precios.map((plan) => (
+              <div
+                key={plan.id}
+                className="group grid gap-2 py-6 transition-transform duration-300 ease-out first:pt-0 last:pb-0 hover:translate-x-1 sm:grid-cols-[1fr_auto] sm:items-center sm:gap-6"
               >
-                Reservar
-              </a>
-            </div>
-          ))}
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="font-hand text-2xl font-bold text-hueso-50 sm:text-3xl">{plan.nombre}</h3>
+                    {plan.destacado && (
+                      <span className="border border-ladrillo-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ladrillo-300">
+                        El más elegido
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 max-w-md text-sm text-hueso-100/70">{plan.detalle}</p>
+                </div>
+                <div className="flex items-baseline gap-2 sm:flex-col sm:items-end sm:gap-0.5">
+                  <span className="font-marker text-3xl text-hueso-50">{plan.precio}</span>
+                  <span className="text-xs text-hueso-100/60">{plan.unidad}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
+
+        <a
+          href="#agenda"
+          className="mt-10 inline-flex min-h-[48px] items-center justify-center bg-ladrillo-600 px-8 text-sm font-bold uppercase tracking-wide text-hueso-50 transition-colors hover:bg-ladrillo-700"
+        >
+          Reservar ahora
+        </a>
       </div>
     </section>
   )
